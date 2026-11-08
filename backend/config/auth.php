@@ -3,5 +3,5 @@
 
 return [
     // Ganti dengan string acak yang panjang dan aman
-    'admin_token' => 'super-secret-lenix-token-2026'
+    'admin_token' => 'marimaraw18'
 ];
