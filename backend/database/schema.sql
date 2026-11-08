@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS portofolio_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE portofolio_db;
+CREATE DATABASE IF NOT EXISTS php_portodb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE php_portodb;
 
 -- Hero Title & Description
 CREATE TABLE IF NOT EXISTS site_settings (
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
 -- Pengalaman / Proyek
 CREATE TABLE IF NOT EXISTS experiences (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    role VACHAR(100) NOT NULL,
+    role VARCHAR(100) NOT NULL,
     company VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
     start_date DATE NOT NULL,
