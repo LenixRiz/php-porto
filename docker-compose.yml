@@ -1,0 +1,57 @@
+services:
+  # 1. Database MySQL
+  db:
+    image: mysql:8.0
+    container_name: porto_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secure_password_2026
+      MYSQL_DATABASE: php_portodb
+      MYSQL_USER: lenix_user
+      MYSQL_PASSWORD: lenix_secure_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Otomatis eksekusi schema.sql saat database pertama kali dibuat
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - porto_network
+
+  # 2. Backend PHP Native
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: porto_backend
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: php_portodb
+      DB_USER: lenix_user
+      DB_PASS: lenix_secure_password
+      ADMIN_TOKEN: super-secret-lenix-token-2026
+    depends_on:
+      - db
+    networks:
+      - porto_network
+
+  # 3. Frontend React + Nginx Proxy
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: porto_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - porto_network
+
+volumes:
+  mysql_data:
+
+networks:
+  porto_network:
+    driver: bridge

@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'host' => '127.0.0.1',
-    'port' => 3306,
-    'database' => 'php_portodb',
-    'username' => 'root',
-    'password' => 'rizkylenix45_',
-    'charset' => 'utf8mb4',
+    'host'     => getenv('DB_HOST') ?: '127.0.0.1',
+    'port'     => (int)(getenv('DB_PORT') ?: 3306),
+    'database' => getenv('DB_NAME') ?: 'php_portodb',
+    'username' => getenv('DB_USER') ?: 'root',
+    'password' => getenv('DB_PASS') ?: '',
+    'charset'  => 'utf8mb4'
 ];
