@@ -1,41 +1,29 @@
 ### Variabel Lingkungan Lokal
 @baseUrl = http://127.0.0.1:8000/api
+@authToken = super-secret-lenix-token-2026
 
-### 1. Ambil Data Portofolio (Publik)
+### 1. Test GET Portfolio (Tetap Terbuka untuk Publik Tanpa Token)
 GET {{baseUrl}}/portfolio
 
-### 2. Update Teks Hero (CMS)
+### 2. Test Admin TANPA Token (Harus Mengembalikan 401 Unauthorized)
 PUT {{baseUrl}}/admin/hero
 Content-Type: application/json
 
 {
-  "title": "Lead Gameplay Programmer & Backend Engineer",
+  "title": "Lead Gameplay Programmer",
+  "description": "Coba akses tanpa login"
+}
+
+### 3. Test Admin DENGAN Token Valid (Harus Berhasil 200 OK)
+PUT {{baseUrl}}/admin/hero
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Lead Gameplay Programmer & Systems Architect",
   "description": "Fokus pada arsitektur data-driven Unity C# dan REST API performa tinggi."
 }
 
-### 3. Tambah Kartu Pengalaman Baru
-POST {{baseUrl}}/admin/experiences
-Content-Type: application/json
-
-{
-  "role": "Unity Developer",
-  "company": "Meraki Studio",
-  "description": "Mengembangkan mekanik tower defense dan optimasi memori.",
-  "start_date": "2024-01-01",
-  "end_date": "2024-12-01"
-}
-
-### 4. Tambah Tag Skill Baru
-POST {{baseUrl}}/admin/skills
-Content-Type: application/json
-
-{
-  "name": "SQLite",
-  "category": "Database"
-}
-
-### 5. Hapus Tag Skill Berdasarkan ID
+### 4. Test Hapus Skill DENGAN Token Valid
 DELETE {{baseUrl}}/admin/skills/1
-
-### 6. Hapus Kartu Pengalaman Berdasarkan ID
-DELETE {{baseUrl}}/admin/experiences/1
+Authorization: Bearer {{authToken}}

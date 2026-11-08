@@ -1,9 +1,11 @@
 <?php
+// public/index.php
 
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../src/Controllers/AdminController.php';
 require_once __DIR__ . '/../src/Controllers/PortofolioController.php';
+require_once __DIR__ . '/../src/Middleware/AuthMiddleware.php'; // 1. Import Middleware
 
 function jsonResponse(int $statusCode, array $data): void {
     http_response_code($statusCode);
@@ -11,10 +13,9 @@ function jsonResponse(int $statusCode, array $data): void {
     exit;
 }
 
-// Get the request method and path
-$method = $_SERVER['REQUEST_METHOD'];
+$method = strtoupper($_SERVER['REQUEST_METHOD']);
 $rawPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$path = rtrim($rawPath, '/');
+$path = rtrim(trim($rawPath), '/');
 if ($path === '') {
     $path = '/';
 }
@@ -23,81 +24,70 @@ $rawInput = file_get_contents('php://input');
 $body = json_decode($rawInput, true) ?? [];
 
 try {
-    // GET /api/portofolio
-    if ($method === 'GET' && $path === '/api/portfolio') {
+    // -------------------------------------------------------------
+    // MIDDLEWARE GATEKEEPER
+    // -------------------------------------------------------------
+    // Jika path diawali dengan '/api/admin', kunci akses wajib pakai token
+    if (str_starts_with($path, '/api/admin')) {
+        AuthMiddleware::handle();
+    }
+
+    // -------------------------------------------------------------
+    // ROUTE PUBLIK
+    // -------------------------------------------------------------
+    if ($method === 'GET' && ($path === '/api/portfolio' || $path === '/api/portofolio')) {
         $controller = new PortofolioController();
         jsonResponse(200, [
             'status' => 'success',
-            'data' => $controller->getPortofolio()
+            'data'   => $controller->getPortofolio()
         ]);
     }
 
-    // PUT /api/admin/hero (update hero title and description)
+    // -------------------------------------------------------------
+    // ROUTE ADMIN (Otomatis Terproteksi oleh AuthMiddleware)
+    // -------------------------------------------------------------
     if ($method === 'PUT' && $path === '/api/admin/hero') {
         $admin = new AdminController();
         $result = $admin->updateHero($body);
         jsonResponse(200, ['status' => 'success', 'data' => $result]);
     }
 
-    // POST /api/admin/experience (create new experience)
-    if ($method === 'POST' && $path === '/api/admin/experiences') {
+    if ($method === 'POST' && ($path === '/api/admin/experience' || $path === '/api/admin/experiences')) {
         $admin = new AdminController();
         $result = $admin->createExperience($body);
-        jsonResponse(200, ['status' => 'success', 'data' => $result]);
+        jsonResponse(201, ['status' => 'success', 'data' => $result]);
     }
 
-    // POST /api/admin/skill (create new skill)
-    if ($method === 'POST' && $path === '/api/admin/skills') {
+    if ($method === 'POST' && ($path === '/api/admin/skill' || $path === '/api/admin/skills')) {
         $admin = new AdminController();
         $result = $admin->createSkill($body);
-        jsonResponse(200, ['status' => 'success', 'data' => $result]);
+        jsonResponse(201, ['status' => 'success', 'data' => $result]);
     }
 
-    // ROUTE CMS: DELETE /api/admin/skills/{id}
     if ($method === 'DELETE' && preg_match('#^/api/admin/skills/(\d+)$#', $path, $matches)) {
-        $id = (int)$matches[1];
         $admin = new AdminController();
-        $result = $admin->deleteSkill($id);
+        $result = $admin->deleteSkill((int)$matches[1]);
         jsonResponse(200, ['status' => 'success', 'data' => $result]);
     }
 
-    // ROUTE CMS: DELETE /api/admin/experiences/{id}
     if ($method === 'DELETE' && preg_match('#^/api/admin/experiences/(\d+)$#', $path, $matches)) {
-        $id = (int)$matches[1];
         $admin = new AdminController();
-        $result = $admin->deleteExperience($id);
+        $result = $admin->deleteExperience((int)$matches[1]);
         jsonResponse(200, ['status' => 'success', 'data' => $result]);
     }
 
+    // Fallback 404
     jsonResponse(404, [
         'status'  => 'error',
         'message' => "Route {$method} {$path} not found."
     ]);
 
-} catch (InvalidArgumentException $e) {
-    jsonResponse(422, [
-        'status'  => 'error',
-        'message' => $e->getMessage()
-    ]);
-} catch (PDOException $e) {
-    jsonResponse(500, [
-        'status'  => 'error',
-        'message' => 'Database Query Error: ' . $e->getMessage()
-    ]);
-} catch (Exception $e) {
-    jsonResponse(500, [
-        'status'  => 'error',
-        'message' => 'Internal Server Error: ' . $e->getMessage()
-    ]);
 } catch (RuntimeException $e) {
-    // 404 jika resource/ID yang dicari tidak ada
-    jsonResponse(404, [
-        'status'  => 'error',
-        'message' => $e->getMessage()
-    ]);
+    jsonResponse(404, ['status' => 'error', 'message' => $e->getMessage()]);
 } catch (InvalidArgumentException $e) {
-    jsonResponse(422, [
-        'status'  => 'error',
-        'message' => $e->getMessage()
-    ]);
+    jsonResponse(422, ['status' => 'error', 'message' => $e->getMessage()]);
+} catch (PDOException $e) {
+    jsonResponse(500, ['status' => 'error', 'message' => 'Database Query Error: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    jsonResponse(500, ['status' => 'error', 'message' => 'Internal Server Error: ' . $e->getMessage()]);
 }
