@@ -453,7 +453,7 @@ export default function App() {
       {/* Footer Section */}
       <footer className="portfolio-footer">
         <p className="footer-text">
-          Made with love for Maria by <span>Lenix aka Rizky</span>
+          Made with love for Maria by <span>Lenix</span>
         </p>
       </footer>
     </div>
